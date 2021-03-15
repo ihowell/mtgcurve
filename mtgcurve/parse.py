@@ -11,20 +11,23 @@ def parse_moxfield_url(moxfield_url):
     data = resp.json()
     print('Finished getting deck data')
 
-    cards = data['mainboard']
+    mainboard = data['mainboard']
 
     mana_producers = []
     num_lands = 0
-    for card, card_data in cards.items():
+    for card, card_data in mainboard.items():
         if card in PRODUCERS:
             mana_producers.append(PRODUCERS[card])
         elif 'Land' in card_data['card']['type_line']:
             num_lands += card_data['quantity']
 
-    print('num_lands:', num_lands)
+    print('num in library', len(mainboard))
+    print('num lands:', num_lands)
     print('mana producers:')
     for producer in mana_producers:
         print('\t', producer.name)
+
+    return len(mainboard), mana_producers, num_lands
 
 
 if __name__ == '__main__':
