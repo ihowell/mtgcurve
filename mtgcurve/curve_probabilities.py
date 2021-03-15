@@ -175,7 +175,7 @@ def main():
         'Selesnya Signet',
     ]
 
-    mana_rocks = [PRODUCERS[name.lower()] for name in mana_rock_names]
+    mana_rocks = [PRODUCERS[name] for name in mana_rock_names]
 
     max_turns = 7
     max_mana = 7
