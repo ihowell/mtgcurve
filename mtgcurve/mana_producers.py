@@ -41,6 +41,18 @@ PRODUCERS = {
     'Selesnya Signet': Card(name='Selesnya Signet', cmc=2, input_cost=1, payoff=2, turns_til_active=0),
     'Simic Signet':    Card(name='Simic Signet',    cmc=2, input_cost=1, payoff=2, turns_til_active=0),
 
+    # Talisman
+    'Talisman of Conviction': Card(name='Talisman of Conviction', cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Creativity': Card(name='Talisman of Creativity', cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Curiosity':  Card(name='Talisman of Curiosity',  cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Dominance':  Card(name='Talisman of Dominance',  cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Hierarchy':  Card(name='Talisman of Hierarchy',  cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Impulse':    Card(name='Talisman of Impulse',    cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Indulgence': Card(name='Talisman of Indulgence', cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Progress':   Card(name='Talisman of Progress',   cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Resilience': Card(name='Talisman of Resilience', cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+    'Talisman of Unity':      Card(name='Talisman of Unity',      cmc=2, input_cost=0, payoff=1, turns_til_active=0),
+
     # Lockets
     'Azorius Locket':  Card(name='Azorius Locket',  cmc=3, input_cost=1, payoff=1, turns_til_active=0),
     'Boros Locket':    Card(name='Boros Locket',    cmc=3, input_cost=1, payoff=1, turns_til_active=0),
