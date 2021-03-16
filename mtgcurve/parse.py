@@ -21,11 +21,11 @@ def parse_moxfield_url(moxfield_url):
         elif 'Land' in card_data['card']['type_line']:
             num_lands += card_data['quantity']
 
-    print('num in library', len(mainboard))
-    print('num lands:', num_lands)
-    print('mana producers:')
-    for producer in mana_producers:
-        print('\t', producer.name)
+    print('Number of cards in library', len(mainboard))
+    print('Number of lands:', num_lands)
+    print('Recognized mana producers:')
+    for i, producer in enumerate(mana_producers):
+        print('\t', i, producer.name)
 
     return len(mainboard), mana_producers, num_lands
 
