@@ -46,7 +46,16 @@ setup(
 
     keywords='mtg',
     python_requires='>=3.6, <4',
-    install_requires=['terminaltables', 'numpy', 'tqdm'],
+    install_requires=[
+        'terminaltables',
+        'numpy',
+        'tqdm',
+    ],
+    extras_require={
+        'tests': [
+            'pytest',
+        ],
+    },
     project_urls={
         'Bug Reports': 'https://github.com/ihowell/mtgcurve/issues',
         'Source': 'https://github.com/ihowell/mtgcurve/',
