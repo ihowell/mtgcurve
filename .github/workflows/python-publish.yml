@@ -15,14 +15,10 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: '3.6.x'
-
     - name: Install package
       run: |
         python -m pip install --upgrade pip setuptools
         pip install .
-    - name: Run unit tests
+    - name: Run tests
       run: |
-        pytest -m "not integtest" --cov=tanuki __tests__/
-    - name: Run integration tests
-      run: |
-        pytest -m integtest --cov=tanuki __tests__/
+        pytest
