@@ -47,8 +47,9 @@ setup(
     keywords='mtg',
     python_requires='>=3.6, <4',
     install_requires=[
-        'terminaltables',
         'numpy',
+        'requests',
+        'terminaltables',
         'tqdm',
     ],
     extras_require={
