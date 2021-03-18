@@ -29,4 +29,5 @@ jobs:
         ls
         which python
         pip freeze
+        which pytest
         pytest ./mtgcurve
