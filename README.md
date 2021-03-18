@@ -47,6 +47,10 @@ There are a few assumptions that are made to make this project possible:
 3. Every turn, we try to make the mana-optimal play. That is, every card we play is a mana producer. This tool does not take into account holding mana open for counterspells or any other reasons. That being said, the 'mana-optimal' play would require more search and would depend on which CMC was most important. Future versions may include other heuristics like this and if you would like to contribute one, please look submitting a pull request.
 4. Enchantments like Wild Growth and Utopia Sprawl take a turn to activate. This will be fixed in a future iteration that will check the number of lands in play when these are cast.
 
+## Contributions
+
+Contributions are heavily encouraged! Even if you don't have much experience with Python, there is a lot of work to be done on this project. If you have any suggestions or contributions, please go ahead and open a Github Issue or submit a Pull Request.
+
 ## Appendix A: Probability of each starting hand
 
 Suppose we have a library with c cards at the beginning of the game. For a commander deck with one commander, c would be 99. Let us suppose that there are n lands in the deck, s mana producers, and u other cards. We can formulate the total number of possible opening hands without mulligaining as: <img src="https://render.githubusercontent.com/render/math?math={c \choose 7}={{n %2B s %2B u} \choose 7}">
