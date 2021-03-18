@@ -1,8 +1,8 @@
-# MTG Curve
-[![Python](https://img.shields.io/pypi/pyversions/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
-[![PyPI](https://img.shields.io/pypi/v/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
-[![Status](https://img.shields.io/pypi/status/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
-[![License](https://img.shields.io/pypi/l/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
+# Azusa
+[![Python](https://img.shields.io/pypi/pyversions/azusa.svg)](https://badge.fury.io/py/azusa)
+[![PyPI](https://img.shields.io/pypi/v/azusa.svg)](https://badge.fury.io/py/azusa)
+[![Status](https://img.shields.io/pypi/status/azusa.svg)](https://badge.fury.io/py/azusa)
+[![License](https://img.shields.io/pypi/l/azusa.svg)](https://badge.fury.io/py/azusa)
 
 MTG Curve helps Magic: the Gathering players estimate the amount of mana they will have on a specific turn. It is primarily geared towards EDH/Commander players, but will hopefully be generic enough to support other formats in the future.
 
@@ -10,14 +10,14 @@ MTG Curve helps Magic: the Gathering players estimate the amount of mana they wi
 
 We are on Pypi, so all you have to do is:
 ```
-pip install mtgcurve
+pip install azusa
 ```
 
 ## Usage
 
 First, host your deck on Moxfield (text input coming soon TM). Then copy the url of the deck and run:
 ```
-python -m mtgcurve https://www.moxfield.com/decks/IlUDC5c-MUejd0psQ6HNoA
+python -m azusa https://www.moxfield.com/decks/IlUDC5c-MUejd0psQ6HNoA
 ```
 
 replacing the above url with your own. It may take some time to run, as more mana producing cards and higher max turn parameters will provide exponential effects to runtime. To modify the maximum CMC to play on curve, modify the `--max_turn` parameter.

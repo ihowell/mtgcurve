@@ -1,5 +1,5 @@
-from mtgcurve.mana_producers import Card
-from mtgcurve.curve_probabilities import calculate_cmc_probs, display_prob_table
+from azusa.mana_producers import Card
+from azusa.curve_probabilities import calculate_cmc_probs, display_prob_table
 
 def test_artifact_probs():
     num_lands = 4

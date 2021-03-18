@@ -12,12 +12,12 @@ here = pathlib.Path(__file__).parent.resolve()
 long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
-    name='mtgcurve',
+    name='azusa',
     version='0.1.1',
     description='Probability estimator for being on curve in mtg',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/ihowell/mtgcurve',
+    url='https://github.com/ihowell/azusa',
     author='Ian Howell',
     classifiers=[
         # How mature is this project? Common values are
@@ -57,7 +57,7 @@ setup(
         ],
     },
     project_urls={
-        'Bug Reports': 'https://github.com/ihowell/mtgcurve/issues',
-        'Source': 'https://github.com/ihowell/mtgcurve/',
+        'Bug Reports': 'https://github.com/ihowell/azusa/issues',
+        'Source': 'https://github.com/ihowell/azusa/',
     },
 )
