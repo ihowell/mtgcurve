@@ -27,4 +27,6 @@ jobs:
         echo 'Current dir'
         pwd
         ls
-        pytest
+        which python
+        pip freeze
+        pytest ./mtgcurve
