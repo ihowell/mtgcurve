@@ -24,4 +24,7 @@ jobs:
         pip install ".[tests]"
     - name: Run tests
       run: |
+        echo 'Current dir'
+        pwd
+        ls
         pytest
