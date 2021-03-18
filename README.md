@@ -1,12 +1,8 @@
 # MTG Curve
-<img src='https://img.shields.io/pypi/l/mtgcurve.svg'>
-<img src='https://img.shields.io/pypi/v/mtgcurve.svg'>
-<img src='https://img.shields.io/pypi/wheel/mtgcurve.svg'>
-<img src='https://img.shields.io/pypi/implementation/mtgcurve.svg'>
-<img src='https://img.shields.io/pypi/status/mtgcurve.svg'>
-<img src='https://img.shields.io/pypi/dm/mtgcurve.svg'>
-<img src='https://img.shields.io/pypi/pyversions/mtgcurve.svg'>
-
+[![Python](https://img.shields.io/pypi/l/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
+[![PyPI](https://img.shields.io/pypi/v/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
+[![Status](https://img.shields.io/pypi/status/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
+[![PyPI](https://img.shields.io/pypi/pyversions/mtgcurve.svg)](https://badge.fury.io/py/mtgcurve)
 
 MTG Curve helps Magic: the Gathering players estimate the amount of mana they will have on a specific turn. It is primarily geared towards EDH/Commander players, but will hopefully be generic enough to support other formats in the future.
 
