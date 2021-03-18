@@ -1,15 +1,26 @@
 # MTG Curve
+<table>
+    <tr>
+        <td><img src='https://img.shields.io/pypi/l/mtgcurve.svg'></td>
+        <td><img src='https://img.shields.io/pypi/v/mtgcurve.svg'></td>
+        <td><img src='https://img.shields.io/pypi/wheel/mtgcurve.svg'></td>
+        <td><img src='https://img.shields.io/pypi/implementation/mtgcurve.svg'></td>
+        <td><img src='https://img.shields.io/pypi/status/mtgcurve.svg'></td>
+        <td><img src='https://img.shields.io/pypi/dm/mtgcurve.svg'></td>
+        <td><img src='https://img.shields.io/pypi/pyversions/mtgcurve.svg'></td>
+    </tr>
+</table>
+
 
 MTG Curve helps Magic: the Gathering players estimate the amount of mana they will have on a specific turn. It is primarily geared towards EDH/Commander players, but will hopefully be generic enough to support other formats in the future.
 
 ## Installation
 
-While the project is very early in the development cycle, it will be submitted on Pypi once it is a tad more stable. In the meantime, clone the repository and install locally:
+We are on Pypi, so all you have to do is:
 ```
-git clone https://github.com/ihowell/mtgcurve
-cd mtgcurve
-pip install -e .
+pip install mtgcurve
 ```
+Please note that we only support Python 3.7+
 
 ## Usage
 
