@@ -18,10 +18,10 @@ jobs:
     - name: Install package
       run: |
         python -m pip install --upgrade pip setuptools
-        pip install .
+        python -m pip install .
     - name: Install test dependencies
       run: |
-        pip install ".[tests]"
+        python -m pip install ".[tests]"
     - name: Run tests
       run: |
         echo 'Current dir'
@@ -30,4 +30,4 @@ jobs:
         which python
         pip freeze
         which pytest
-        pytest ./mtgcurve
+        python -m pytest ./mtgcurve
