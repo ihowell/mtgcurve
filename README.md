@@ -12,7 +12,6 @@ We are on Pypi, so all you have to do is:
 ```
 pip install mtgcurve
 ```
-Please note that we only support Python 3.7+
 
 ## Usage
 
