@@ -42,7 +42,6 @@ setup(
         # 'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
-
     keywords='mtg',
     python_requires='>=3.7, <4',
     install_requires=[

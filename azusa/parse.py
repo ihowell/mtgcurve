@@ -1,7 +1,8 @@
 import requests
 import fire
 
-from .mana_producers import PRODUCERS
+from azusa.mana_producers import PRODUCERS
+
 
 def parse_moxfield_url(moxfield_url):
     deck_id = moxfield_url.split('/')[-1]
@@ -12,7 +13,6 @@ def parse_moxfield_url(moxfield_url):
     print('Finished getting deck data')
 
     mainboard = data['mainboard']
-
 
     mana_producers = []
     num_lands = 0

@@ -1,5 +1,21 @@
 from collections import namedtuple
 
+
+class Card:
+    def __init__(self, name, cmc):
+        self.name = name
+        self.cmc = cmc
+
+    def cast(self):
+        pass
+
+    def add_callbacks(callback_dict):
+        pass
+
+class ManaRock(Card):
+    def __init__(self, name, cmc, input_cost, payoff, turns_til_active):
+        self.
+
 Card = namedtuple('Card', [
     'name',
     'cmc',
@@ -8,9 +24,10 @@ Card = namedtuple('Card', [
     'turns_til_active',
 ])
 
+# pylint: disable=line-too-long
+# yapf: disable
 PRODUCERS = {
-    ### ARTIFACTS
-
+    # ARTIFACTS
     # Amazing things
     'Chrome Mox':  Card(name='Chrome Mox',  cmc=0, input_cost=0, payoff=1, turns_til_active=0),
     'Mana Crypt':  Card(name='Mana Crypt',  cmc=0, input_cost=0, payoff=2, turns_til_active=0),
@@ -65,7 +82,7 @@ PRODUCERS = {
     'Selesnya Locket': Card(name='Selesnya Locket', cmc=3, input_cost=1, payoff=1, turns_til_active=0),
     'Simic Locket':    Card(name='Simic Locket',    cmc=3, input_cost=1, payoff=1, turns_til_active=0),
 
-    ### 1 MANA DORKS
+    # 1 MANA DORKS
     'Arbor Elf':            Card(name='Arbor Elf',            cmc=1, input_cost=0, payoff=1, turns_til_active=1),
     'Avacyn\'s Pilgrim':    Card(name='Avacy\'s Pilgrim',     cmc=1, input_cost=0, payoff=1, turns_til_active=1),
     'Elvish Mystic':        Card(name='Elvish Mystic',        cmc=1, input_cost=0, payoff=1, turns_til_active=1),
@@ -73,9 +90,11 @@ PRODUCERS = {
     'Fyndhorn Elves':       Card(name='Fyndhorn Elves',       cmc=1, input_cost=0, payoff=1, turns_til_active=1),
     'Llanowar Elves':       Card(name='Llanowar Elves',       cmc=1, input_cost=0, payoff=1, turns_til_active=1),
 
-    ### 2 MANA DORKS
+    # 2 MANA DORKS
     'Paradise Druid': Card(name='Paradise Druid', cmc=2, input_cost=0, payoff=1, turns_til_active=1),
 
-    ### ENCHANTMENTS
-    'Wild Growth': Card(name='Wild Growth', cmc=1, input_cost=0, payoff=1, turns_til_active=1), # Need to make lands_til_active
+    # ENCHANTMENTS
+    'Wild Growth':   Card(name='Wild Growth',   cmc=1, input_cost=0, payoff=1, turns_til_active=1),
+    'Utopia Sprawl': Card(name='Utopia Sprawl', cmc=1, input_cost=0, payoff=1, turns_til_active=1),
 }
+# yapf: enable
