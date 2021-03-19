@@ -28,7 +28,7 @@ def parse_moxfield_url(moxfield_url):
 
     max_cmc = int(max_cmc)
 
-    print('Number of cards in library', len(mainboard))
+    print('Number of cards in library', num_cards_in_library)
     print('Number of lands:', num_lands)
     print('Maximum CMC in library:', max_cmc)
     print('Recognized mana producers:')
