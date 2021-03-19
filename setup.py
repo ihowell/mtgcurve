@@ -13,12 +13,13 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='azusa',
-    version='0.1.2',
+    version='0.1.3',
     description='Probability estimator for being on curve in mtg',
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/ihowell/azusa',
     author='Ian Howell',
+    packages=['azusa'],
     classifiers=[
         # How mature is this project? Common values are
         #   3 - Alpha
@@ -42,7 +43,6 @@ setup(
         # 'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3 :: Only',
     ],
-
     keywords='mtg',
     python_requires='>=3.7, <4',
     install_requires=[
