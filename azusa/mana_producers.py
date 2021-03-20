@@ -1,12 +1,8 @@
 from collections import namedtuple
+from dataclasses import dataclass
 
 
 class NonlandCard:
-    def __init__(self, id, name, cmc):
-        self.id = id
-        self.name = name
-        self.cmc = cmc
-
     def cast(self, state, remaining_mana):
         pass
 
@@ -15,18 +11,13 @@ class NonlandCard:
         pass
 
 
+@dataclass
 class ManaPermanent(NonlandCard):
-    def __init__(self, name, cmc, input_cost, payoff, enters_tapped):
-        self.name = name
-        self.cmc = cmc
-        self.input_cost = input_cost
-        self.payoff = payoff
-        self.enters_tapped = enters_tapped
-
-    def __eq__(self, other):
-        return (self.cmc == other.cmc and self.input_cost == other.input_cost
-                and self.payoff == other.payoff
-                and self.enters_tapped == other.enters_tapped)
+    name: str
+    cmc: int
+    input_cost: int
+    payoff: int
+    enters_tapped: bool
 
     @property
     def fast(self):
@@ -41,22 +32,14 @@ class ManaPermanent(NonlandCard):
         return remaining_mana
 
 
+@dataclass
 class LandFetcher(NonlandCard):
-    def __init__(self, name, cmc, num_lands_to_play, num_tapped_lands_to_play,
-                 num_lands_to_hand, num_lands_to_sac):
-        self.name = name
-        self.cmc = cmc
-        self.num_lands_to_play = num_lands_to_play
-        self.num_tapped_lands_to_play = num_tapped_lands_to_play
-        self.num_lands_to_hand = num_lands_to_hand
-        self.num_lands_to_sac = num_lands_to_sac
-
-    def __eq__(self, other):
-        return (self.cmc == other.cmc
-                and self.num_lands_to_play == other.num_lands_to_play and
-                self.num_tapped_lands_to_play == other.num_tapped_lands_to_play
-                and self.num_lands_to_hand == other.num_lands_to_hand
-                and self.num_lands_to_sac == other.num_lands_to_sac)
+    name: str
+    cmc: int
+    num_lands_to_play: int
+    num_tapped_lands_to_play: int
+    num_lands_to_hand: int
+    num_lands_to_sac: int
 
     def cast(self, state, remaining_mana):
         assert remaining_mana >= self.cmc
@@ -81,15 +64,11 @@ class LandFetcher(NonlandCard):
         return False
 
 
+@dataclass
 class ExtraLands(NonlandCard):
-    def __init__(self, name, cmc, num_extra_lands):
-        self.name = name
-        self.cmc = cmc
-        self.num_extra_lands = num_extra_lands
-
-    def __eq__(self, other):
-        return (self.cmc == other.cmc
-                and self.num_extra_lands == other.num_extra_lands)
+    name: str
+    cmc: int
+    num_extra_lands: int
 
     def cast(self, state, remaining_mana):
         assert remaining_mana >= self.cmc
@@ -106,15 +85,6 @@ class ExtraLands(NonlandCard):
     @property
     def fast(self):
         return False
-
-
-Card = namedtuple('Card', [
-    'name',
-    'cmc',
-    'input_cost',
-    'payoff',
-    'enters_tapped',
-])
 
 # pylint: disable=line-too-long
 # yapf: disable
@@ -136,6 +106,7 @@ PRODUCERS = {
 
     # 2 For 1s
     'Mind Stone':      ManaPermanent(name='Mind Stone',      cmc=2, input_cost=0, payoff=1, enters_tapped=False),
+    'Thought Vessel':  ManaPermanent(name='Thought Vessel',  cmc=2, input_cost=0, payoff=1, enters_tapped=False),
 
     # Signets
     'Arcane Signet':   ManaPermanent(name='Arcane Signet',   cmc=2, input_cost=0, payoff=1, enters_tapped=False),
@@ -163,20 +134,37 @@ PRODUCERS = {
     'Talisman of Unity':      ManaPermanent(name='Talisman of Unity',      cmc=2, input_cost=0, payoff=1, enters_tapped=False),
 
     # Lockets
-    'Azorius Locket':  ManaPermanent(name='Azorius Locket',  cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Boros Locket':    ManaPermanent(name='Boros Locket',    cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Dimir Locket':    ManaPermanent(name='Dimir Locket',    cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Golgari Locket':  ManaPermanent(name='Golgari Locket',  cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Gruul Locket':    ManaPermanent(name='Gruul Locket',    cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Izzet Locket':    ManaPermanent(name='Izzet Locket',    cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Orzhov Locket':   ManaPermanent(name='Orzhov Locket',   cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Rakdos Locket':   ManaPermanent(name='Rakdos Locket',   cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Selesnya Locket': ManaPermanent(name='Selesnya Locket', cmc=3, input_cost=1, payoff=1, enters_tapped=False),
-    'Simic Locket':    ManaPermanent(name='Simic Locket',    cmc=3, input_cost=1, payoff=1, enters_tapped=False),
+    'Azorius Locket':  ManaPermanent(name='Azorius Locket',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Boros Locket':    ManaPermanent(name='Boros Locket',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Dimir Locket':    ManaPermanent(name='Dimir Locket',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Golgari Locket':  ManaPermanent(name='Golgari Locket',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Gruul Locket':    ManaPermanent(name='Gruul Locket',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Izzet Locket':    ManaPermanent(name='Izzet Locket',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Orzhov Locket':   ManaPermanent(name='Orzhov Locket',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Rakdos Locket':   ManaPermanent(name='Rakdos Locket',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Selesnya Locket': ManaPermanent(name='Selesnya Locket', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Simic Locket':    ManaPermanent(name='Simic Locket',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+
+    'Obelisk of Bant':   ManaPermanent(name='Obelisk of Bant',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Obelisk of Esper':  ManaPermanent(name='Obelisk of Esper',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Obelisk of Grixis': ManaPermanent(name='Obelisk of Grixis', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Obelisk of Jund':   ManaPermanent(name='Obelisk of Jund',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Obelisk of Naya':   ManaPermanent(name='Obelisk of Naya',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+
+    'Chromatic Lantern':      ManaPermanent(name='Chromatic Lantern',      cmc=3, input_cost=1, payoff=1, enters_tapped=False),
+    'Vessel of Endless Rest': ManaPermanent(name='Vessel of Endless Rest', cmc=3, input_cost=1, payoff=1, enters_tapped=False),
+
+    'Worn Powerstone': ManaPermanent(name='Worn Powerstone', cmc=3, input_cost=0, payoff=2, enters_tapped=True),
+
+    'Hedron Archive': ManaPermanent(name='Hedron Archive', cmc=4, input_cost=0, payoff=2, enters_tapped=False),
+
+    'Thran Dynamo': ManaPermanent(name='Thran Dynamo', cmc=4, input_cost=0, payoff=3, enters_tapped=False),
 
     # 1 MANA DORKS
     'Arbor Elf':            ManaPermanent(name='Arbor Elf',            cmc=1, input_cost=0, payoff=1, enters_tapped=True),
     'Avacyn\'s Pilgrim':    ManaPermanent(name='Avacyn\'s Pilgrim',    cmc=1, input_cost=0, payoff=1, enters_tapped=True),
+    'Birds of Paradise':    ManaPermanent(name='Birds of Paradise',    cmc=1, input_cost=0, payoff=1, enters_tapped=True),
+    'Boreal Druid':         ManaPermanent(name='Boreal Druid',         cmc=1, input_cost=0, payoff=1, enters_tapped=True),
     'Elvish Mystic':        ManaPermanent(name='Elvish Mystic',        cmc=1, input_cost=0, payoff=1, enters_tapped=True),
     'Elves of Deep Shadow': ManaPermanent(name='Elves of Deep Shadow', cmc=1, input_cost=0, payoff=1, enters_tapped=True),
     'Fyndhorn Elves':       ManaPermanent(name='Fyndhorn Elves',       cmc=1, input_cost=0, payoff=1, enters_tapped=True),

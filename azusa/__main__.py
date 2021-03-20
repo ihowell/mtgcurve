@@ -26,7 +26,6 @@ def main(moxfield_url, max_turns=None, max_mana=None, num_threads=4):
     for i in range(prob_table.shape[1]):
         rows.append(np.sum(prob_table[:, i:], axis=1))
     rows = np.stack(rows, axis=1)
-
     display_prob_table(rows)
 
 
