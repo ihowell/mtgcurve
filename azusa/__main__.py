@@ -1,4 +1,5 @@
 import fire
+import numpy as np
 
 from azusa.curve_probabilities import calculate_cmc_probs, display_prob_table
 from azusa.parse import parse_moxfield_url
@@ -17,7 +18,16 @@ def main(moxfield_url, max_turns=None, max_mana=None, num_threads=4):
                                      max_turns=max_turns,
                                      max_mana=max_mana or max_cmc,
                                      num_threads=num_threads)
+    print('Probability of having X mana on turn Y')
     display_prob_table(prob_table)
+
+    print('Probability of having at least X mana on turn Y')
+    rows = []
+    for i in range(prob_table.shape[1]):
+        rows.append(np.sum(prob_table[:, i:], axis=1))
+    rows = np.stack(rows, axis=1)
+
+    display_prob_table(rows)
 
 
 if __name__ == '__main__':

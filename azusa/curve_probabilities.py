@@ -1,5 +1,5 @@
-from collections import namedtuple
 import concurrent.futures
+from dataclasses import dataclass
 import itertools
 import copy
 import tqdm
@@ -8,21 +8,36 @@ from terminaltables import AsciiTable
 import numpy as np
 
 from azusa.mana_producers import PRODUCERS
-from azusa.util import defaultdict
+from azusa.util import defaultdict, combinations_with_quantity
 
-State = namedtuple('State', [
-    'num_cards_in_library',
-    'turn_number',
-    'num_lands_in_play',
-    'num_lands_in_hand',
-    'num_lands_in_library',
-    'inactive_mana_producers_in_play',
-    'mana_producers_in_play',
-    'mana_producers_in_hand',
-    'mana_producers_in_library',
-    'num_other_cards_in_hand',
-    'num_other_cards_in_library',
-])
+
+@dataclass
+class State:
+    num_cards_in_library: int
+    turn_number: int
+
+    # In play effects
+    num_lands_in_play: int
+    # inactive_mana_producers_in_play,
+    lands_per_turn: int
+    extra_mana_per_turn: int
+
+    # Cards in hand
+    num_lands_in_hand: int
+    mana_producers_in_hand: dict
+    num_other_cards_in_hand: int
+
+    # Cards in library
+    num_lands_in_library: int
+    mana_producers_in_library: dict
+    num_other_cards_in_library: int
+
+    def copy(self):
+        new = copy.copy(self)
+        new.mana_producers_in_hand = copy.copy(new.mana_producers_in_hand)
+        new.mana_producers_in_library = copy.copy(
+            new.mana_producers_in_library)
+        return new
 
 
 def log_choose(a, b):
@@ -37,65 +52,43 @@ def choose(a, b):
 
 
 def start_turn(state):
-    turn_number = state.turn_number + 1
-    inactive_mana_producers_in_play = []
-    mana_producers_in_play = copy.copy(state.mana_producers_in_play)
-    for mana_producer, turns_til_active in state.inactive_mana_producers_in_play:
-        assert turns_til_active > 0
-        if turns_til_active == 1:
-            mana_producers_in_play.append(mana_producer)
-        else:
-            inactive_mana_producers_in_play.append(
-                (mana_producer, turns_til_active - 1))
-
-    state = state._replace(
-        inactive_mana_producers_in_play=inactive_mana_producers_in_play,
-        mana_producers_in_play=mana_producers_in_play)
+    state.turn_number += 1
 
     possibilities = []
 
-    total_prob = 0.
-
     # Draw a land
     prob = state.num_lands_in_library / state.num_cards_in_library
-    total_prob += prob
-    # print('Draw land prob', prob)
-    new_state = state._replace(
-        turn_number=turn_number,
-        num_cards_in_library=state.num_cards_in_library - 1,
-        num_lands_in_library=state.num_lands_in_library - 1,
-        num_lands_in_hand=state.num_lands_in_hand + 1,
-        mana_producers_in_hand=copy.copy(state.mana_producers_in_hand))
+    new_state = state.copy()
+    new_state.num_cards_in_library = state.num_cards_in_library - 1
+    new_state.num_lands_in_library = state.num_lands_in_library - 1
+    new_state.num_lands_in_hand = state.num_lands_in_hand + 1
+    # mana_producers_in_hand=copy.copy(state.mana_producers_in_hand))
     possibilities.append((new_state, prob))
 
     # Draw a mana producer
-    for i, producer in enumerate(state.mana_producers_in_library):
-        prob = 1. / state.num_cards_in_library
-        total_prob += prob
-        # print('Draw producer prob', prob)
-        mana_producers_in_library = copy.copy(state.mana_producers_in_library)
-        mana_producers_in_hand = copy.copy(state.mana_producers_in_hand)
-        producer = mana_producers_in_library.pop(i)
-        mana_producers_in_hand.append(producer)
-        new_state = state._replace(
-            num_cards_in_library=state.num_cards_in_library - 1,
-            mana_producers_in_library=mana_producers_in_library,
-            mana_producers_in_hand=mana_producers_in_hand,
-            turn_number=turn_number)
+    for producer_id, quantity in state.mana_producers_in_library.items():
+        new_state = state.copy()
+
+        prob = quantity / state.num_cards_in_library
+
+        new_state.num_cards_in_library -= 1
+        new_state.mana_producers_in_library[producer_id] -= 1
+        if new_state.mana_producers_in_library[producer_id] == 0:
+            del new_state.mana_producers_in_library[producer_id]
+
+        if producer_id not in new_state.mana_producers_in_hand:
+            new_state.mana_producers_in_hand[producer_id] = 0
+        new_state.mana_producers_in_hand[producer_id] += 1
+
         possibilities.append((new_state, prob))
 
     # Draw any other card
     prob = state.num_other_cards_in_library / state.num_cards_in_library
-    total_prob += prob
-    # print('Draw other prob', prob)
-    new_state = state._replace(
-        turn_number=turn_number,
-        num_cards_in_library=state.num_cards_in_library - 1,
-        num_other_cards_in_hand=state.num_other_cards_in_hand + 1,
-        num_other_cards_in_library=state.num_other_cards_in_library - 1,
-        mana_producers_in_hand=copy.copy(state.mana_producers_in_hand))
+    new_state = state.copy()
+    new_state.num_cards_in_library = state.num_cards_in_library - 1
+    new_state.num_other_cards_in_hand = state.num_other_cards_in_hand + 1
+    new_state.num_other_cards_in_library = state.num_other_cards_in_library - 1
     possibilities.append((new_state, prob))
-    # print('total prob', total_prob)
 
     return possibilities
 
@@ -103,61 +96,47 @@ def start_turn(state):
 def play_turn(state):
     remaining_mana = int(state.num_lands_in_play)
     assert remaining_mana >= 0
+    remaining_mana += state.extra_mana_per_turn
 
-    for mana_producer in state.mana_producers_in_play:
-        assert mana_producer.payoff >= mana_producer.input_cost
-        remaining_mana += mana_producer.payoff - mana_producer.input_cost
+    # for mana_producer in state.mana_producers_in_play:
+    #     assert mana_producer.payoff >= mana_producer.input_cost
+    #     remaining_mana += mana_producer.payoff - mana_producer.input_cost
 
     updates = defaultdict(lambda key: copy.copy(getattr(state, key)))
 
     if state.num_lands_in_hand > 0:
-        updates['num_lands_in_hand'] -= 1
-        updates['num_lands_in_play'] += 1
-        remaining_mana += 1
+        num_lands = min(state.num_lands_in_hand, state.lands_per_turn)
+        state.num_lands_in_hand -= num_lands
+        state.num_lands_in_play += num_lands
+        remaining_mana += num_lands
 
-    fast_producers = [
-        m for m in state.mana_producers_in_hand
-        if m.payoff > m.cmc + m.input_cost and m.turns_til_active == 0
-    ]
     added_fast_producer = True
     while added_fast_producer:
         added_fast_producer = False
-        i = 0
-        while i < len(fast_producers):
-            mana_producer = fast_producers[i]
-            if mana_producer.cmc + mana_producer.input_cost <= remaining_mana:
-                j = updates['mana_producers_in_hand'].index(mana_producer)
-                updates['mana_producers_in_hand'].pop(j)
-                remaining_mana += mana_producer.payoff - mana_producer.cmc - \
-                    mana_producer.input_cost
-                fast_producers.pop(i)
+        for producer_id, quantity in state.mana_producers_in_hand.items():
+            producer = PRODUCERS[producer_id]
+            if producer.fast and producer.cmc <= remaining_mana and quantity > 0:
                 added_fast_producer = True
-            else:
-                i += 1
+                remaining_mana = producer.cast(state, remaining_mana)
+                state.mana_producers_in_hand[producer_id] -= 1
 
     mana_on_turn = remaining_mana
 
-    producers_played = []
-    for producer in state.mana_producers_in_hand:
-        if producer.cmc <= remaining_mana:
-            producers_played.append(producer)
-            if producer.turns_til_active == 0:
-                updates['mana_producers_in_play'].append(producer)
-                remaining_mana -= producer.cmc
-                if remaining_mana >= producer.input_cost:
-                    remaining_mana += producer.payoff - producer.input_cost
-            else:
-                updates['inactive_mana_producers_in_play'].append(
-                    (producer, producer.turns_til_active))
-                remaining_mana -= producer.cmc
+    producer_played = False
+    for producer_id, quantity in state.mana_producers_in_hand.items():
+        producer = PRODUCERS[producer_id]
+        if producer.cmc <= remaining_mana and quantity > 0:
+            producer_played = True
+            remaining_mana = producer.cast(state, remaining_mana)
+            state.mana_producers_in_hand[producer_id] -= 1
 
-    if len(producers_played) > 0:
-        updates['mana_producers_in_hand'] = [
-            p for p in state.mana_producers_in_hand
-            if p not in producers_played
-        ]
+    if producer_played:
+        state.mana_producers_in_hand = {
+            p: q
+            for p, q in state.mana_producers_in_hand.items() if q > 0
+        }
 
-    state = state._replace(**updates)
+    # state = state._replace(**updates)
 
     return state, mana_on_turn
 
@@ -179,6 +158,9 @@ def calculate_cmc_probs(num_cards_in_library,
 
     def starting_hand_generator():
         log_hand_combinations = log_choose(num_cards_in_library, 7)
+        mana_producer_list = itertools.chain(
+            [[producer_id] * quantity
+             for producer_id, quantity in mana_producers.items()])
         for num_lands_in_hand in range(min(num_lands, 7) + 1):
             log_land_comb = log_choose(num_lands, num_lands_in_hand)
 
@@ -189,9 +171,14 @@ def calculate_cmc_probs(num_cards_in_library,
                     7 - num_lands_in_hand - num_producers_in_hand)
                 log_prob = log_land_comb + log_other_comb - log_hand_combinations
                 prob = np.exp(log_prob)
-                for producers in itertools.combinations(
+
+                # for producers in itertools.combinations(
+                #         mana_producers, num_producers_in_hand):
+
+                for producers in combinations_with_quantity(
                         mana_producers, num_producers_in_hand):
-                    yield (num_lands_in_hand, list(producers),
+
+                    yield (num_lands_in_hand, producers,
                            7 - num_lands_in_hand - num_producers_in_hand, prob)
 
     def thread_calc_prob_table(hand_state, hand_prob):
@@ -227,18 +214,23 @@ def calculate_cmc_probs(num_cards_in_library,
         threads = []
         for num_lands_in_hand, mana_producers_in_hand, num_other_cards_in_hand, initial_prob in starting_hand_generator(
         ):
-            mana_producers_in_library = [
-                m for m in mana_producers if m not in mana_producers_in_hand
-            ]
+            mana_producers_in_library = copy.copy(mana_producers)
+            for item, quantity in mana_producers_in_hand.items():
+                mana_producers_in_library[item] -= quantity
+            mana_producers_in_library = dict(
+                filter(lambda x: x[1] > 0, mana_producers_in_library.items()))
+
             state = State(
                 num_cards_in_library=num_cards_in_library - num_lands_in_hand -
                 len(mana_producers_in_hand) - num_other_cards_in_hand,
                 turn_number=0,
                 num_lands_in_play=0,
+                lands_per_turn=1,
+                extra_mana_per_turn=0,
                 num_lands_in_hand=num_lands_in_hand,
                 num_lands_in_library=num_lands - num_lands_in_hand,
-                inactive_mana_producers_in_play=[],
-                mana_producers_in_play=[],
+                # inactive_mana_producers_in_play=[],
+                # mana_producers_in_play=[],
                 mana_producers_in_hand=mana_producers_in_hand,
                 mana_producers_in_library=mana_producers_in_library,
                 num_other_cards_in_hand=num_other_cards_in_hand,
@@ -257,14 +249,12 @@ def calculate_cmc_probs(num_cards_in_library,
 def display_prob_table(prob_table):
     max_turns = prob_table.shape[0] - 1
     max_mana = prob_table.shape[1] - 1
-    table_data = [[''] + [f'Mana {i}' for i in range(max_mana)] +
-                  [f'Mana {max_mana}+', 'Total']]
+    table_data = [[''] + [f'Mana {i}'
+                          for i in range(max_mana)] + [f'Mana {max_mana}+']]
     for turn in range(1, max_turns + 1):
         row = [f'Turn {turn}']
         for mana in range(max_mana + 1):
             row.append(f'{prob_table[turn][mana]*100:.2f}%')
-        total = np.sum(prob_table[turn])
-        row.append(f'{total*100:.2f}%')
         table_data.append(row)
 
     table = AsciiTable(table_data)
