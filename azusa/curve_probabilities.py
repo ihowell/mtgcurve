@@ -18,7 +18,7 @@ class State:
 
     # In play effects
     num_lands_in_play: int
-    # inactive_mana_producers_in_play,
+    # activatable_permanents: list = []
     lands_per_turn: int
     extra_mana_per_turn: int
 
