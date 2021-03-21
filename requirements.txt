@@ -7,3 +7,4 @@ tqdm==4.54.0
 numpy==1.18.5
 scrython==1.9.0
 pytest==6.2.2
+.
