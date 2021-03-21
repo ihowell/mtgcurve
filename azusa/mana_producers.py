@@ -6,6 +6,9 @@ class NonlandCard:
     def cast(self, state, remaining_mana):
         pass
 
+    def ramp(self, state):
+        pass
+
     @property
     def fast(self):
         pass
@@ -18,6 +21,9 @@ class ManaPermanent(NonlandCard):
     input_cost: int
     payoff: int
     enters_tapped: bool
+
+    def ramp(self, state):
+        return self.payoff
 
     @property
     def fast(self):
@@ -41,27 +47,33 @@ class LandFetcher(NonlandCard):
     num_lands_to_hand: int = 0
     num_lands_to_sac: int = 0
 
+    def ramp(self, state):
+        return self.num_lands_to_play + self.num_tapped_lands_to_play - self.num_lands_to_sac
+
+    @property
+    def fast(self):
+        return False
+
     def cast(self, state, remaining_mana):
         assert remaining_mana >= self.cmc
         assert state.num_lands_in_play >= self.num_lands_to_sac
         remaining_mana -= self.cmc
         state.num_lands_in_play -= self.num_lands_to_sac
 
+        state.num_cards_in_library -= self.num_lands_to_play
         state.num_lands_in_library -= self.num_lands_to_play
         state.num_lands_in_play += self.num_lands_to_play
         remaining_mana += self.num_lands_to_play
 
+        state.num_cards_in_library -= self.num_tapped_lands_to_play
         state.num_lands_in_library -= self.num_tapped_lands_to_play
         state.num_lands_in_play += self.num_tapped_lands_to_play
 
+        state.num_cards_in_library -= self.num_lands_to_hand
         state.num_lands_in_library -= self.num_lands_to_hand
         state.num_lands_in_hand += self.num_lands_to_hand
 
         return remaining_mana
-
-    @property
-    def fast(self):
-        return False
 
 
 @dataclass
@@ -69,6 +81,13 @@ class ExtraLands(NonlandCard):
     name: str
     cmc: int
     num_extra_lands: int
+
+    def ramp(self, state):
+        return min(self.num_extra_lands, state.num_lands_in_hand)
+
+    @property
+    def fast(self):
+        return False
 
     def cast(self, state, remaining_mana):
         assert remaining_mana >= self.cmc
@@ -82,19 +101,51 @@ class ExtraLands(NonlandCard):
         remaining_mana += num_immediate_lands
         return remaining_mana
 
-    @property
-    def fast(self):
-        return False
-
 
 @dataclass
 class SacPermanent(NonlandCard):
     name: str
     cmc: int
-    activation_cost: int
+    activation_cost: int = 0
     num_lands_to_play: int = 0
     num_tapped_lands_to_play: int = 0
     num_lands_to_hand: int = 0
+
+    def ramp(self, state):
+        return self.num_lands_to_play + self.num_tapped_lands_to_play
+
+    @property
+    def fast(self):
+        return False
+
+    def cast(self, state, remaining_mana):
+        assert remaining_mana >= self.cmc
+        remaining_mana -= self.cmc
+
+        if self.name not in state.activatable_permanents:
+            state.activatable_permanents[self.name] = 0
+        state.activatable_permanents[self.name] += 1
+        return remaining_mana
+
+    def activate(self, state, remaining_mana):
+        assert remaining_mana >= self.activation_cost
+        remaining_mana -= self.activation_cost
+
+        state.num_cards_in_library -= self.num_lands_to_play
+        state.num_lands_in_library -= self.num_lands_to_play
+        state.num_lands_in_play += self.num_lands_to_play
+        remaining_mana += self.num_lands_to_play
+
+        state.num_cards_in_library -= self.num_tapped_lands_to_play
+        state.num_lands_in_library -= self.num_tapped_lands_to_play
+        state.num_lands_in_play += self.num_tapped_lands_to_play
+
+        state.num_cards_in_library -= self.num_lands_to_hand
+        state.num_lands_in_library -= self.num_lands_to_hand
+        state.num_lands_in_hand += self.num_lands_to_hand
+
+        state.activatable_permanents[self.name] -= 1
+        return remaining_mana
 
 
 # pylint: disable=line-too-long
@@ -123,7 +174,7 @@ PRODUCERS = {
     'Fractured Powerstone': ManaPermanent(name='Fractured Powerstone', cmc=2, input_cost=0, payoff=1, enters_tapped=False),
     'Mind Stone':           ManaPermanent(name='Mind Stone',           cmc=2, input_cost=0, payoff=1, enters_tapped=False),
     'Prismatic Lens':       ManaPermanent(name='Prismatic Lens',       cmc=2, input_cost=0, payoff=1, enters_tapped=False),
-    'Pristine Talisman':    ManaPermanent(name='Prismatic Lens',       cmc=2, input_cost=0, payoff=1, enters_tapped=False),
+    'Pristine Talisman':    ManaPermanent(name='Pristine Talisman',       cmc=2, input_cost=0, payoff=1, enters_tapped=False),
     'Thought Vessel':       ManaPermanent(name='Thought Vessel',       cmc=2, input_cost=0, payoff=1, enters_tapped=False),
 
     'Corrupted Grafstone': ManaPermanent(name='Corrupted Grafstone', cmc=2, input_cost=0, payoff=1, enters_tapped=True),
@@ -205,18 +256,18 @@ PRODUCERS = {
 
     'Atarka Monument':   ManaPermanent(name='Atarka Monument',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Dromoka Monument':  ManaPermanent(name='Dromoka Monument',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
-    'Kolaghan Monument': ManaPermanent(name='Kologhan Monument', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Kolaghan Monument': ManaPermanent(name='Kolaghan Monument', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Ojutai Monument':   ManaPermanent(name='Ojutai Monument',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Silumgar Monument': ManaPermanent(name='Silumgar Monument', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
 
-    'Cryptolith Fragment':  ManaPermanent(name='Cryptolith Fragment',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
+    # 'Cryptolith Fragment':  ManaPermanent(name='Cryptolith Fragment',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Fieldmist Borderpost': ManaPermanent(name='Fieldmist Borderpost', cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Firewild Borderpost':  ManaPermanent(name='Firewild Borderpost',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Mistvein Borderpost':  ManaPermanent(name='Mistvein Borderpost',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Veinfire Borderpost':  ManaPermanent(name='Veinfire Borderpost',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Wildfield Borderpost': ManaPermanent(name='Wildfield Borderpost', cmc=3, input_cost=0, payoff=1, enters_tapped=True),
 
-    'Indatha Crystal': ManaPermanent(name='Indata Crystal',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Indatha Crystal': ManaPermanent(name='Indatha Crystal',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Ketria Crystal':  ManaPermanent(name='Ketria Crystal',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Raugrin Crystal': ManaPermanent(name='Raugrin Crystal', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Savai Crystal':   ManaPermanent(name='Savai Crystal',   cmc=3, input_cost=0, payoff=1, enters_tapped=False),
@@ -228,17 +279,17 @@ PRODUCERS = {
     'Skull of Ramos': ManaPermanent(name='Skull of Ramos', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Tooth of Ramos': ManaPermanent(name='Tooth of Ramos', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
 
-    'Bloodstone Cameo':  ManaPermanent(name='Bloddstone Cameo',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Bloodstone Cameo':  ManaPermanent(name='Bloodstone Cameo',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Drake-Skull Cameo': ManaPermanent(name='Drake-Skull Cameo', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Seashell Cameo':    ManaPermanent(name='Seashell Cameo',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Tigereye Cameo':    ManaPermanent(name='Tigereye Cameo',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
-    'Troll-horn Cameo':  ManaPermanent(name='Troll-horn Cameo',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Troll-Horn Cameo':  ManaPermanent(name='Troll-Horn Cameo',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
 
     'Bonder\'s Ornament':     ManaPermanent(name='Bonder\'s Ornament',     cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Chromatic Lantern':      ManaPermanent(name='Chromatic Lantern',      cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Coalition Relic':        ManaPermanent(name='Coalition Relic',        cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Commander\'s Sphere':    ManaPermanent(name='Commander\'s Sphere',    cmc=3, input_cost=0, payoff=1, enters_tapped=False),
-    'Darsteel Ingot':         ManaPermanent(name='Darsteel Ingot',         cmc=3, input_cost=0, payoff=1, enters_tapped=False),
+    'Darksteel Ingot':        ManaPermanent(name='Darksteel Ingot',        cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Fountain of Ichor':      ManaPermanent(name='Fountain of Ichor',      cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Hierophant\'s Chalice':  ManaPermanent(name='Hierophant\'s Chalice',  cmc=3, input_cost=0, payoff=1, enters_tapped=False),
     'Honor-Worn Shaku':       ManaPermanent(name='Honor-Worn Shaku',       cmc=3, input_cost=0, payoff=1, enters_tapped=False),
@@ -299,7 +350,7 @@ PRODUCERS = {
     'Elfhame Druid':          ManaPermanent(name='Elfhame Druid',          cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Golden Hind':            ManaPermanent(name='Golden Hind',            cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Harabaz Druid':          ManaPermanent(name='Harabaz Druid',          cmc=2, input_cost=0, payoff=1, enters_tapped=True),
-    'Haverster Druid':        ManaPermanent(name='Harvester Druid',        cmc=2, input_cost=0, payoff=1, enters_tapped=True),
+    'Harvester Druid':        ManaPermanent(name='Harvester Druid',        cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Heart Warden':           ManaPermanent(name='Heart Warden',           cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Hedron Crawler':         ManaPermanent(name='Hedron Crawler',         cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Ilysian Caryatid':       ManaPermanent(name='Ilysian Caryatid',       cmc=2, input_cost=0, payoff=1, enters_tapped=True),
@@ -319,15 +370,15 @@ PRODUCERS = {
     'Quirion Elves':          ManaPermanent(name='Quirion Elves',          cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Quirion Explorer':       ManaPermanent(name='Quirion Explorer',       cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Radha, Heir to Keld':    ManaPermanent(name='Radha, Heir to Keld',    cmc=2, input_cost=0, payoff=1, enters_tapped=True),
-    'Rosethorn Acolyte':      ManaPermanent(name='Rosehorn Acolyte',       cmc=2, input_cost=0, payoff=1, enters_tapped=True),
-    'Scorned Villager':       ManaPermanent(name='Scorned Villager',       cmc=2, input_cost=0, payoff=1, enters_tapped=True),
+    # 'Rosethorn Acolyte':      ManaPermanent(name='Rosethorn Acolyte',      cmc=2, input_cost=0, payoff=1, enters_tapped=True),
+    # 'Scorned Villager':       ManaPermanent(name='Scorned Villager',       cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Sea Scryer':             ManaPermanent(name='Sea Scryer',             cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Skull Prophet':          ManaPermanent(name='Skull Prophet',          cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Skyshroud Elf':          ManaPermanent(name='Skyshroud Elf',          cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Steward of Valeron':     ManaPermanent(name='Steward of Valeron',     cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Sylvan Caryatid':        ManaPermanent(name='Sylvan Caryatid',        cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Sylvok Explorer':        ManaPermanent(name='Sylvok Explorer',        cmc=2, input_cost=0, payoff=1, enters_tapped=True),
-    'Ulvenwald Captive':      ManaPermanent(name='Ulvenwald Captive',      cmc=2, input_cost=0, payoff=1, enters_tapped=True),
+    # 'Ulvenwald Captive':      ManaPermanent(name='Ulvenwald Captive',      cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Urborg Elf':             ManaPermanent(name='Urborg Elf',             cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Utopia Tree':            ManaPermanent(name='Utopia Tree',            cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Vine Trellis':           ManaPermanent(name='Vine Trellis',           cmc=2, input_cost=0, payoff=1, enters_tapped=True),
@@ -335,7 +386,7 @@ PRODUCERS = {
     'Whisperer of the Wilds': ManaPermanent(name='Whisperer of the Wilds', cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Wirewood Elf':           ManaPermanent(name='Wirewood Elf',           cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Woodland Mystic':        ManaPermanent(name='Woodland Mystic',        cmc=2, input_cost=0, payoff=1, enters_tapped=True),
-    'Zhur-Taa Druid':         ManaPermanent(name='Woodland Mystic',        cmc=2, input_cost=0, payoff=1, enters_tapped=True),
+    'Zhur-Taa Druid':         ManaPermanent(name='Zhur-Taa Druid',         cmc=2, input_cost=0, payoff=1, enters_tapped=True),
 
     # 3 MANA DORKS
     'Alloy Myr':            ManaPermanent(name='Alloy Myr',            cmc=3, input_cost=0, payoff=1, enters_tapped=True),
@@ -389,7 +440,7 @@ PRODUCERS = {
     'Fertile Ground':   ManaPermanent(name='Fertile Ground',   cmc=2, input_cost=0, payoff=1, enters_tapped=True),
     'Gift of Paradise': ManaPermanent(name='Gift of Paradise', cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Glittering Frost': ManaPermanent(name='Glittering Frost', cmc=3, input_cost=0, payoff=1, enters_tapped=True),
-    'Market Festival':  ManaPermanent(name='Glittering Frost', cmc=4, input_cost=0, payoff=1, enters_tapped=True),
+    'Market Festival':  ManaPermanent(name='Market Festival',  cmc=4, input_cost=0, payoff=1, enters_tapped=True),
     'Overgrowth':       ManaPermanent(name='Overgrowth',       cmc=3, input_cost=0, payoff=2, enters_tapped=True),
     'Sheltered Aerie':  ManaPermanent(name='Sheltered Aerie',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
     'Utopia Sprawl':    ManaPermanent(name='Utopia Sprawl',    cmc=1, input_cost=0, payoff=1, enters_tapped=True),
@@ -442,7 +493,7 @@ PRODUCERS = {
     'Wayward Swordtooth':         ExtraLands(name='Wayward Swordtooth',         cmc=3, num_extra_lands=1),
 
     # SAC ARTIFACTS
-    'Burnished Heart':    SacPermanent(name='Burnished Heart',    cmc=3, activation_cost=3, num_tapped_lands_to_play=2),
+    'Burnished Hart':     SacPermanent(name='Burnished Hart',     cmc=3, activation_cost=3, num_tapped_lands_to_play=2),
     'Expedition Map':     SacPermanent(name='Expedition Map',     cmc=1, activation_cost=2, num_lands_to_hand=1),
     'Sakura-Tribe Elder': SacPermanent(name='Sakura-Tribe Elder', cmc=2, activation_cost=0, num_tapped_lands_to_play=1),
     'Wayfarer\'s Bauble': SacPermanent(name='Wayfarer\'s Bauble', cmc=1, activation_cost=2, num_tapped_lands_to_play=1),

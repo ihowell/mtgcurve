@@ -1,3 +1,5 @@
+import logging
+
 import fire
 import numpy as np
 
@@ -5,7 +7,14 @@ from azusa.curve_probabilities import calculate_cmc_probs, display_prob_table
 from azusa.parse import parse_moxfield_url
 
 
-def main(moxfield_url, max_turns=None, max_mana=None, num_threads=4):
+def main(moxfield_url,
+         max_turns=None,
+         max_mana=None,
+         num_threads=4,
+         debug=False):
+    if debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     cards_in_library, mana_producers, num_lands_in_library, max_cmc = parse_moxfield_url(
         moxfield_url)
 
