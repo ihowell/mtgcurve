@@ -58,6 +58,9 @@ setup(
         'tests': [
             'pytest',
         ],
+        'webapp': [
+            'streamlit',
+        ],
     },
     project_urls={
         'Bug Reports': 'https://github.com/ihowell/azusa/issues',

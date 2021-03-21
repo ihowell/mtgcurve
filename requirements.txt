@@ -1,0 +1,9 @@
+fire==0.3.1
+streamlit==0.79.0
+terminaltables==3.1.0
+python_constraint==1.4.0
+requests==2.25.0
+tqdm==4.54.0
+numpy==1.18.5
+scrython==1.9.0
+pytest==6.2.2
