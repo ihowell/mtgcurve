@@ -46,6 +46,7 @@ setup(
     keywords='mtg',
     python_requires='>=3.7, <4',
     install_requires=[
+        'scrython',
         'fire==0.3.1',
         'numpy',
         'requests',
