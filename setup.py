@@ -13,7 +13,7 @@ long_description = (here / 'README.md').read_text(encoding='utf-8')
 
 setup(
     name='azusa',
-    version='0.1.4',
+    version='0.1.5',
     description='Probability estimator for being on curve in mtg',
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -46,10 +46,13 @@ setup(
     keywords='mtg',
     python_requires='>=3.7, <4',
     install_requires=[
+        'scrython',
+        'fire==0.3.1',
         'numpy',
         'requests',
         'terminaltables',
         'tqdm',
+        'python-constraint==1.4.0',
     ],
     extras_require={
         'tests': [
