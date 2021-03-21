@@ -1,6 +1,7 @@
 import concurrent.futures
 from dataclasses import dataclass, field
 import itertools
+import multiprocessing
 import logging
 import copy
 import tqdm
@@ -150,12 +151,39 @@ def play_turn(state):
     return state, mana_on_turn
 
 
+def calculate_subtree_probs(state, initial_prob, sub_prob_table, max_turns,
+                            max_mana):
+    state, mana = play_turn(state)
+    sub_prob_table[state.turn_number, min(mana, max_mana)] += initial_prob
+    assert state.turn_number >= 1, state
+    assert mana >= 0, state
+    if state.turn_number >= max_turns:
+        return
+
+    possible_states = start_turn(state)
+    for child_state, prob in possible_states:
+        calculate_subtree_probs(child_state, initial_prob * prob,
+                                sub_prob_table, max_turns, max_mana)
+
+
+def thread_calc_prob_table(args):
+    hand_state, hand_prob, max_turns, max_mana = args
+    sub_prob_table = np.zeros((max_turns + 1, max_mana + 1), dtype=np.double)
+    child_prob = 0.
+    for child_state, prob in start_turn(hand_state):
+        child_prob += prob
+        calculate_subtree_probs(child_state, hand_prob * prob, sub_prob_table,
+                                max_turns, max_mana)
+
+    return sub_prob_table
+
+
 def calculate_cmc_probs(num_cards_in_library,
                         mana_producers,
                         num_lands,
                         max_turns=3,
                         max_mana=5,
-                        num_threads=4):
+                        num_threads=None):
     num_opening_hands = 0
     for num_lands_in_hand in range(min(num_lands, 7) + 1):
         for num_producers_in_hand in range(
@@ -173,75 +201,59 @@ def calculate_cmc_probs(num_cards_in_library,
 
             for num_producers_in_hand in range(
                     min(len(mana_producers), 7 - num_lands_in_hand) + 1):
+
+                num_other_cards_in_hand = 7 - num_lands_in_hand - num_producers_in_hand
+
                 log_other_comb = log_choose(
                     num_cards_in_library - num_lands - len(mana_producers),
-                    7 - num_lands_in_hand - num_producers_in_hand)
+                    num_other_cards_in_hand)
                 log_prob = log_land_comb + log_other_comb - log_hand_combinations
-                prob = np.exp(log_prob)
+                initial_prob = np.exp(log_prob)
 
-                for producers in combinations_with_quantity(
+                logging.debug(
+                    f'Num lands={num_lands_in_hand}, prod={num_producers_in_hand}, other={num_other_cards_in_hand}'
+                )
+                logging.debug(
+                    f'Log probs lands={log_land_comb:.5f}, other={log_other_comb:.5f}, total={log_hand_combinations:.5f}'
+                )
+
+                for mana_producers_in_hand in combinations_with_quantity(
                         mana_producers, num_producers_in_hand):
 
-                    yield (num_lands_in_hand, producers,
-                           7 - num_lands_in_hand - num_producers_in_hand, prob)
-                    total_prob += prob
+                    mana_producers_in_library = copy.copy(mana_producers)
+                    for item, quantity in mana_producers_in_hand.items():
+                        mana_producers_in_library[item] -= quantity
+                    mana_producers_in_library = dict(
+                        filter(lambda x: x[1] > 0,
+                               mana_producers_in_library.items()))
+
+                    state = State(
+                        num_cards_in_library=num_cards_in_library -
+                        num_lands_in_hand - len(mana_producers_in_hand) -
+                        num_other_cards_in_hand,
+                        turn_number=0,
+                        num_lands_in_hand=num_lands_in_hand,
+                        num_lands_in_library=num_lands - num_lands_in_hand,
+                        mana_producers_in_hand=mana_producers_in_hand,
+                        mana_producers_in_library=mana_producers_in_library,
+                        num_other_cards_in_hand=num_other_cards_in_hand,
+                        num_other_cards_in_library=num_other_cards_in_library -
+                        num_other_cards_in_hand)
+                    yield (state, initial_prob, max_turns, max_mana)
+                    total_prob += initial_prob
         logging.debug(f'Total probability from starting hand {total_prob}')
-
-    def thread_calc_prob_table(hand_state, hand_prob):
-        sub_prob_table = np.zeros((max_turns + 1, max_mana + 1),
-                                  dtype=np.double)
-
-        def calculate_subtree_probs(state, initial_prob):
-            state, mana = play_turn(state)
-            sub_prob_table[state.turn_number,
-                           min(mana, max_mana)] += initial_prob
-            assert state.turn_number >= 1, state
-            assert mana >= 0, state
-            if state.turn_number >= max_turns:
-                return
-
-            possible_states = start_turn(state)
-            for child_state, prob in possible_states:
-                calculate_subtree_probs(child_state, initial_prob * prob)
-
-        child_prob = 0.
-        for child_state, prob in start_turn(hand_state):
-            child_prob += prob
-            calculate_subtree_probs(child_state, hand_prob * prob)
-
-        return sub_prob_table
 
     prob_table = np.zeros((max_turns + 1, max_mana + 1), dtype=np.double)
     num_other_cards_in_library = num_cards_in_library - len(
         mana_producers) - num_lands
 
-    with concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_threads) as executor:
-        threads = []
-        for num_lands_in_hand, mana_producers_in_hand, num_other_cards_in_hand, initial_prob in starting_hand_generator(
-        ):
-            mana_producers_in_library = copy.copy(mana_producers)
-            for item, quantity in mana_producers_in_hand.items():
-                mana_producers_in_library[item] -= quantity
-            mana_producers_in_library = dict(
-                filter(lambda x: x[1] > 0, mana_producers_in_library.items()))
+    with multiprocessing.Pool(processes=num_threads) as pool:
+        sub_prob_tables = pool.imap_unordered(thread_calc_prob_table,
+                                              starting_hand_generator())
 
-            state = State(
-                num_cards_in_library=num_cards_in_library - num_lands_in_hand -
-                len(mana_producers_in_hand) - num_other_cards_in_hand,
-                turn_number=0,
-                num_lands_in_hand=num_lands_in_hand,
-                num_lands_in_library=num_lands - num_lands_in_hand,
-                mana_producers_in_hand=mana_producers_in_hand,
-                mana_producers_in_library=mana_producers_in_library,
-                num_other_cards_in_hand=num_other_cards_in_hand,
-                num_other_cards_in_library=num_other_cards_in_library -
-                num_other_cards_in_hand)
-            th = executor.submit(thread_calc_prob_table, state, initial_prob)
-            threads.append(th)
+        for sub_prob_table in tqdm.tqdm(sub_prob_tables,
+                                        total=num_opening_hands):
 
-        for th in tqdm.tqdm(threads, total=len(threads)):
-            sub_prob_table = th.result()
             prob_table += sub_prob_table
 
     return prob_table
