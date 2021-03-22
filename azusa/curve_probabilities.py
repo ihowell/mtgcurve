@@ -183,7 +183,8 @@ def calculate_cmc_probs(num_cards_in_library,
                         num_lands,
                         max_turns=3,
                         max_mana=5,
-                        num_threads=None):
+                        num_threads=None,
+                        progress_bar=tqdm.tqdm):
     num_opening_hands = 0
     for num_lands_in_hand in range(min(num_lands, 7) + 1):
         for num_producers_in_hand in range(
@@ -251,8 +252,8 @@ def calculate_cmc_probs(num_cards_in_library,
         sub_prob_tables = pool.imap_unordered(thread_calc_prob_table,
                                               starting_hand_generator())
 
-        for sub_prob_table in tqdm.tqdm(sub_prob_tables,
-                                        total=num_opening_hands):
+        for sub_prob_table in progress_bar(sub_prob_tables,
+                                           total=num_opening_hands):
 
             prob_table += sub_prob_table
 

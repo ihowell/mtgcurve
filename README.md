@@ -13,14 +13,24 @@ We are on Pypi, so all you have to do is:
 pip install azusa
 ```
 
+If you are wanting to use the web app, install with the `webapp` opion:
+```
+pip install 'azusa[webapp]'
+```
+
 ## Usage
 
-First, host your deck on Moxfield (text input coming soon TM). Then copy the url of the deck and run:
+First, build a deck on Moxfield. Then copy the url of the deck and run:
 ```
 python -m azusa https://www.moxfield.com/decks/IlUDC5c-MUejd0psQ6HNoA
 ```
 
-replacing the above url with your own. It may take some time to run, as more mana producing cards and higher max turn parameters will provide exponential effects to runtime. To modify the maximum CMC to play on curve, modify the `--max_turn` parameter.
+replacing the above url with your own. It may take some time to run, as more mana producing cards and higher max turn parameters will provide exponential effects to runtime. Additionally, `python -m azusa --help` will display additional arguments that can be tuned.
+
+If you want the web application experience, ensure that you installed with the extra dependencies and then run:
+```
+streamlit run azusa/client.py
+```
 
 ## Vocabulary
 
