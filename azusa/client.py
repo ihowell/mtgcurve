@@ -47,14 +47,21 @@ class ProgressBar:
 
 loop = get_or_create_eventloop()
 
-os.environ
+server_is_local = 'localhost' in st.get_option('browser.serverAddress')
 
 st.title('Azusa: Probability Curve Calculator')
 
 max_turns = st.sidebar.slider('Max Turns', 1, 10, 3)
 max_mana = st.sidebar.slider('Max Mana', 1, 20, 10)
-num_processes = st.sidebar.slider('CPU Count', 1, os.cpu_count(),
-                                  min(4, os.cpu_count()))
+
+if server_is_local:
+    num_processes = st.sidebar.slider('Process Count', 1, os.cpu_count(),
+                                      min(4, os.cpu_count()))
+else:
+    num_processes = 1
+    st.sidebar.write('''
+Process Count: 1, Download app at https://github.com/ihowell/azusa to use local resources.
+    ''')
 
 moxfield_url = st.text_input('Moxfield deck url:')
 if moxfield_url:
@@ -96,11 +103,3 @@ if moxfield_url:
                                           for i in range(max_turns + 1)))
     st.write('Probability to have access to at least X mana on turn Y')
     st.dataframe(prob_data_frame.style.format('{:.2%}'))
-'''
-### Do you need more compute?
-
-If so, I recommend installing this application to onto a desktop with
-more power, as streamlit's self-hosted option has limited compute
-resources. Take a look at https://github.com/ihowell/azusa for
-instructions on how to download and get started.
-'''
