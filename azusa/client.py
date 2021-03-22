@@ -47,10 +47,10 @@ class ProgressBar:
 
 loop = get_or_create_eventloop()
 
-# for key in st.config.get_config_options():
-#     st.write(key, ':', st.get_option(key))
-
-server_is_local = 'localhost' in st.get_option('browser.serverAddress')
+if 'AZUSA_LOCAL' in os.environ:
+    server_is_local = os.environ['AZUSA_LOCAL']
+else:
+    server_is_local = False
 
 st.title('Azusa: Probability Curve Calculator')
 
