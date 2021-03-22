@@ -17,6 +17,10 @@ If you are wanting to use the web app, install with the `webapp` opion:
 ```
 pip install 'azusa[webapp]'
 ```
+When running the webclient, you'll need to enable local computation, which unlocks multi-processing. To do this, add the following line to your `.bashrc` file:
+```
+export AZUSA_LOCAL=1
+```
 
 ## Usage
 
