@@ -1,4 +1,5 @@
 # Azusa
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/ihowell/azusa/webapp/azusa/client.py)
 [![Python](https://img.shields.io/pypi/pyversions/azusa.svg)](https://badge.fury.io/py/azusa)
 [![PyPI](https://img.shields.io/pypi/v/azusa.svg)](https://badge.fury.io/py/azusa)
 [![Status](https://img.shields.io/pypi/status/azusa.svg)](https://badge.fury.io/py/azusa)
