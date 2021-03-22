@@ -1,10 +1,11 @@
 import asyncio
-import streamlit as st
-import numpy as np
-import scrython
-import time
-import pandas as pd
+import logging
 import os
+
+import numpy as np
+import pandas as pd
+import scrython
+import streamlit as st
 
 from azusa.curve_probabilities import calculate_cmc_probs
 from azusa.parse import parse_moxfield_url
@@ -45,12 +46,41 @@ class ProgressBar:
             self.status_text.text(f'{self.progress} / {self.total}')
 
 
+class LoggingHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.warnings = []
+
+    def emit(self, record):
+        self.warnings.append(record)
+
+
+@st.cache
+def get_image_uris(producer_ids):
+    uris = []
+    for producer_id in producer_ids:
+        card = scrython.cards.Named(exact=producer_id)
+        uris.append(card.image_uris()['png'])
+    return uris
+
+
+warning_handler = LoggingHandler()
+warning_handler.setLevel(logging.WARNING)
+
+logger = logging.getLogger()
+logger.addHandler(warning_handler)
+
 loop = get_or_create_eventloop()
 
 if 'AZUSA_LOCAL' in os.environ:
     server_is_local = os.environ['AZUSA_LOCAL']
 else:
     server_is_local = False
+
+st.set_page_config(
+    page_title='Azusa: Probability Calculator',
+    layout='wide',
+)
 
 st.title('Azusa: Probability Curve Calculator')
 
@@ -72,10 +102,7 @@ if moxfield_url:
         moxfield_url)
 
     st.text('Ramp Detected:')
-    uris = []
-    for producer_id in mana_producers:
-        card = scrython.cards.Named(exact=producer_id)
-        uris.append(card.image_uris()['png'])
+    uris = get_image_uris(mana_producers)
     st.image(uris, width=120)
 
     if max_turns is None:
@@ -106,3 +133,8 @@ if moxfield_url:
                                           for i in range(max_turns + 1)))
     st.write('Probability to have access to at least X mana on turn Y')
     st.dataframe(prob_data_frame.style.format('{:.2%}'))
+
+if len(warning_handler.warnings) > 0:
+    st.write('Warnings:')
+    for warning in warning_handler.warnings:
+        st.write(warning_handler.format(warning))
