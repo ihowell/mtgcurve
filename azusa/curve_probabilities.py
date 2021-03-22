@@ -185,6 +185,11 @@ def calculate_cmc_probs(num_cards_in_library,
                         max_mana=5,
                         num_threads=None,
                         progress_bar=tqdm.tqdm):
+    for producer_id in mana_producers.keys():
+        producer = PRODUCERS[producer_id]
+        if producer.warning:
+            logging.warning(f'{producer_id}: {producer.warning}')
+
     num_opening_hands = 0
     for num_lands_in_hand in range(min(num_lands, 7) + 1):
         for num_producers_in_hand in range(

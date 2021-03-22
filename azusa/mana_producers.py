@@ -21,6 +21,7 @@ class ManaPermanent(NonlandCard):
     input_cost: int
     payoff: int
     enters_tapped: bool
+    warning: str = None
 
     def ramp(self, state):
         return self.payoff
@@ -46,6 +47,7 @@ class LandFetcher(NonlandCard):
     num_tapped_lands_to_play: int = 0
     num_lands_to_hand: int = 0
     num_lands_to_sac: int = 0
+    warning: str = None
 
     def ramp(self, state):
         return self.num_lands_to_play + self.num_tapped_lands_to_play - self.num_lands_to_sac
@@ -81,6 +83,7 @@ class ExtraLands(NonlandCard):
     name: str
     cmc: int
     num_extra_lands: int
+    warning: str = None
 
     def ramp(self, state):
         return min(self.num_extra_lands, state.num_lands_in_hand)
@@ -110,6 +113,7 @@ class SacPermanent(NonlandCard):
     num_lands_to_play: int = 0
     num_tapped_lands_to_play: int = 0
     num_lands_to_hand: int = 0
+    warning: str = None
 
     def ramp(self, state):
         return self.num_lands_to_play + self.num_tapped_lands_to_play
@@ -169,7 +173,7 @@ PRODUCERS = {
 
     'Coldsteel Heart':  ManaPermanent(name='Coldsteel Heart',  cmc=2, input_cost=0, payoff=1, enters_tapped=True),
 
-    # 2 For 1s
+    # 2 MANA ROCKS
     'Fellwar Stone':        ManaPermanent(name='Fellwar Stone',        cmc=2, input_cost=0, payoff=1, enters_tapped=False),
     'Fractured Powerstone': ManaPermanent(name='Fractured Powerstone', cmc=2, input_cost=0, payoff=1, enters_tapped=False),
     'Mind Stone':           ManaPermanent(name='Mind Stone',           cmc=2, input_cost=0, payoff=1, enters_tapped=False),
@@ -437,16 +441,16 @@ PRODUCERS = {
     'Elvish Aberration': ManaPermanent(name='Elvish Aberration', cmc=6, input_cost=0, payoff=3, enters_tapped=True),
 
     # ENCHANTMENTS
-    'Fertile Ground':   ManaPermanent(name='Fertile Ground',   cmc=2, input_cost=0, payoff=1, enters_tapped=True),
-    'Gift of Paradise': ManaPermanent(name='Gift of Paradise', cmc=3, input_cost=0, payoff=1, enters_tapped=True),
-    'Glittering Frost': ManaPermanent(name='Glittering Frost', cmc=3, input_cost=0, payoff=1, enters_tapped=True),
-    'Market Festival':  ManaPermanent(name='Market Festival',  cmc=4, input_cost=0, payoff=1, enters_tapped=True),
-    'Overgrowth':       ManaPermanent(name='Overgrowth',       cmc=3, input_cost=0, payoff=2, enters_tapped=True),
-    'Sheltered Aerie':  ManaPermanent(name='Sheltered Aerie',  cmc=3, input_cost=0, payoff=1, enters_tapped=True),
-    'Utopia Sprawl':    ManaPermanent(name='Utopia Sprawl',    cmc=1, input_cost=0, payoff=1, enters_tapped=True),
-    'Weirding Wood':    ManaPermanent(name='Weirding Wood',    cmc=3, input_cost=0, payoff=1, enters_tapped=True),
-    'Wild Growth':      ManaPermanent(name='Wild Growth',      cmc=1, input_cost=0, payoff=1, enters_tapped=True),
-    'Wolfwillow Haven': ManaPermanent(name='Wolfwillow Haven', cmc=2, input_cost=0, payoff=1, enters_tapped=True),
+    'Fertile Ground':   ManaPermanent(name='Fertile Ground',   cmc=2, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Gift of Paradise': ManaPermanent(name='Gift of Paradise', cmc=3, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Glittering Frost': ManaPermanent(name='Glittering Frost', cmc=3, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Market Festival':  ManaPermanent(name='Market Festival',  cmc=4, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Overgrowth':       ManaPermanent(name='Overgrowth',       cmc=3, input_cost=0, payoff=2, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Sheltered Aerie':  ManaPermanent(name='Sheltered Aerie',  cmc=3, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Utopia Sprawl':    ManaPermanent(name='Utopia Sprawl',    cmc=1, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Weirding Wood':    ManaPermanent(name='Weirding Wood',    cmc=3, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Wild Growth':      ManaPermanent(name='Wild Growth',      cmc=1, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
+    'Wolfwillow Haven': ManaPermanent(name='Wolfwillow Haven', cmc=2, input_cost=0, payoff=1, enters_tapped=True, warning='Enchant lands take 1 turn to activate'),
 
     # PLANESWALKERS
     'Domri, Anarch of Bolas': ManaPermanent(name='Domri, Anarch of Bolas', cmc=3, input_cost=0, payoff=1, enters_tapped=False),
@@ -471,7 +475,7 @@ PRODUCERS = {
     'Harrow':              LandFetcher(name='Harrow',              cmc=3, num_lands_to_play=2, num_lands_to_sac=1),
     'Primal Growth':       LandFetcher(name='Primal Growth',       cmc=3, num_lands_to_play=1),
     'Recross the Paths':   LandFetcher(name='Recross the Paths',   cmc=3, num_lands_to_play=1),
-    'Search for Tomorrow': LandFetcher(name='Search for Tomorrow', cmc=3, num_lands_to_play=1),
+    'Search for Tomorrow': LandFetcher(name='Search for Tomorrow', cmc=3, num_lands_to_play=1, warning='Suspend not yet implemented'),
     'Spoils of Victory':   LandFetcher(name='Spoils of Victory',   cmc=3, num_lands_to_play=1),
     'Wood Elves':          LandFetcher(name='Wood Elves',          cmc=3, num_lands_to_play=1),
 
@@ -486,11 +490,15 @@ PRODUCERS = {
     'Hour of Promise':  LandFetcher(name='Hour of Promise',  cmc=5, num_tapped_lands_to_play=2),
 
     # EXTRA LANDS
-    'Azusa, Lost but Seeking':    ExtraLands(name='Azusa, Lost but Seeking',    cmc=3, num_extra_lands=2),
-    'Dryad of the Ilysian Grove': ExtraLands(name='Dryad of the Ilysian Grove', cmc=3, num_extra_lands=1),
-    'Ghirapur Orrery':            ExtraLands(name='Ghirapur Orrery',            cmc=4, num_extra_lands=1),
-    'Exploration':                ExtraLands(name='Exploration',                cmc=1, num_extra_lands=1),
-    'Wayward Swordtooth':         ExtraLands(name='Wayward Swordtooth',         cmc=3, num_extra_lands=1),
+    'Aesi, Tyrant of Gyre Strait': ExtraLands(name='Aesi, Tyrant of Gyre Strait', cmc=6, num_extra_lands=1, warning='Extra draw not yet implemented'),
+    'Azusa, Lost but Seeking':     ExtraLands(name='Azusa, Lost but Seeking',     cmc=3, num_extra_lands=2),
+    'Dryad of the Ilysian Grove':  ExtraLands(name='Dryad of the Ilysian Grove',  cmc=3, num_extra_lands=1),
+    'Ghirapur Orrery':             ExtraLands(name='Ghirapur Orrery',             cmc=4, num_extra_lands=1, warning='Extra draw not yet implemented'),
+    'Exploration':                 ExtraLands(name='Exploration',                 cmc=1, num_extra_lands=1),
+    'Mina and Denn, Wildborn':     ExtraLands(name='Mina and Denn, Wildborn',     cmc=4, num_extra_lands=1),
+    'Oracle of Mul Daya':          ExtraLands(name='Oracle of Mul Daya',          cmc=3, num_extra_lands=1, warning='Top card reveal not yet implemented'),
+    'Rites of Flourishing':        ExtraLands(name='Rites of Flourishing',        cmc=3, num_extra_lands=1, warning='Extra draw not yet implemented'),
+    'Wayward Swordtooth':          ExtraLands(name='Wayward Swordtooth',          cmc=3, num_extra_lands=1),
 
     # SAC ARTIFACTS
     'Burnished Hart':     SacPermanent(name='Burnished Hart',     cmc=3, activation_cost=3, num_tapped_lands_to_play=2),
