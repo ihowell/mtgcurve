@@ -1,4 +1,5 @@
 import constraint
+import numpy as np
 
 
 class defaultdict(dict):
@@ -32,3 +33,11 @@ def combinations_with_quantity(items_dict, total):
     for solution in problem.getSolutionIter():
         solution = dict(filter(lambda x: x[1] > 0, solution.items()))
         yield solution
+
+
+def cumulative_probs(prob_table):
+    rows = []
+    for i in range(prob_table.shape[1]):
+        rows.append(np.sum(prob_table[:, i:], axis=1))
+    rows = np.stack(rows, axis=1)
+    return rows

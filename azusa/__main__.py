@@ -5,6 +5,7 @@ import numpy as np
 
 from azusa.curve_probabilities import calculate_cmc_probs, display_prob_table
 from azusa.parse import parse_moxfield_url
+from azusa.util import cumulative_probs
 
 
 def main(moxfield_url,
@@ -31,11 +32,7 @@ def main(moxfield_url,
     display_prob_table(prob_table)
 
     print('Probability of having at least X mana on turn Y')
-    rows = []
-    for i in range(prob_table.shape[1]):
-        rows.append(np.sum(prob_table[:, i:], axis=1))
-    rows = np.stack(rows, axis=1)
-    display_prob_table(rows)
+    display_prob_table(cumulative_probs(prob_table))
 
 
 if __name__ == '__main__':
