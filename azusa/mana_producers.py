@@ -13,6 +13,14 @@ class NonlandCard:
     def fast(self):
         pass
 
+    def equivalency_test(self, other, fields):
+        if self.__class__ != other.__class__:
+            return False
+        for field in fields:
+            if getattr(self, field) != getattr(other, field):
+                return False
+        return True
+
 
 @dataclass
 class ManaPermanent(NonlandCard):
@@ -22,6 +30,10 @@ class ManaPermanent(NonlandCard):
     payoff: int
     enters_tapped: bool
     warning: str = None
+
+    def equivalent(self, other):
+        return self.equivalency_test(
+            other, ['cmc', 'input_cost', 'payoff', 'enters_tapped'])
 
     def ramp(self, state):
         return self.payoff
@@ -48,6 +60,12 @@ class LandFetcher(NonlandCard):
     num_lands_to_hand: int = 0
     num_lands_to_sac: int = 0
     warning: str = None
+
+    def equivalent(self, other):
+        return self.equivalency_test(other, [
+            'cmc', 'num_lands_to_play', 'num_tapped_lands_to_play',
+            'num_lands_to_hand', 'num_lands_to_sac'
+        ])
 
     def ramp(self, state):
         return self.num_lands_to_play + self.num_tapped_lands_to_play - self.num_lands_to_sac
@@ -85,6 +103,9 @@ class ExtraLands(NonlandCard):
     num_extra_lands: int
     warning: str = None
 
+    def equivalent(self, other):
+        return self.equivalency_test(other, ['cmc', 'num_extra_lands'])
+
     def ramp(self, state):
         return min(self.num_extra_lands, state.num_lands_in_hand)
 
@@ -114,6 +135,12 @@ class SacPermanent(NonlandCard):
     num_tapped_lands_to_play: int = 0
     num_lands_to_hand: int = 0
     warning: str = None
+
+    def equivalent(self, other):
+        return self.equivalency_test(other, [
+            'cmc', 'activation_cost', 'num_lands_to_play',
+            'num_tapped_lands_to_play', 'num_lands_to_hand'
+        ])
 
     def ramp(self, state):
         return self.num_lands_to_play + self.num_tapped_lands_to_play

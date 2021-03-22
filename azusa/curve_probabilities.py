@@ -188,14 +188,19 @@ def calculate_cmc_probs(num_cards_in_library,
     for producer_id in mana_producers.keys():
         producer = PRODUCERS[producer_id]
         if producer.warning:
-            logging.warning(f'{producer_id}: {producer.warning}')
+            logging.warning('%s: %s', producer_id, producer.warning)
+
+    mana_producers = reduce_mana_producers(mana_producers)
+
+    num_mana_producers = sum(mana_producers.values())
 
     num_opening_hands = 0
     for num_lands_in_hand in range(min(num_lands, 7) + 1):
         for num_producers_in_hand in range(
-                min(len(mana_producers), 7 - num_lands_in_hand) + 1):
-            num_opening_hands += choose(len(mana_producers),
-                                        num_producers_in_hand)
+                min(num_mana_producers, 7 - num_lands_in_hand) + 1):
+            for _ in combinations_with_quantity(mana_producers,
+                                                num_producers_in_hand):
+                num_opening_hands += 1
     num_opening_hands = int(num_opening_hands)
     print('Num opening hands', num_opening_hands)
 
@@ -206,25 +211,30 @@ def calculate_cmc_probs(num_cards_in_library,
             log_land_comb = log_choose(num_lands, num_lands_in_hand)
 
             for num_producers_in_hand in range(
-                    min(len(mana_producers), 7 - num_lands_in_hand) + 1):
-
+                    min(num_mana_producers, 7 - num_lands_in_hand) + 1):
                 num_other_cards_in_hand = 7 - num_lands_in_hand - num_producers_in_hand
-
                 log_other_comb = log_choose(
-                    num_cards_in_library - num_lands - len(mana_producers),
+                    num_cards_in_library - num_lands - num_mana_producers,
                     num_other_cards_in_hand)
-                log_prob = log_land_comb + log_other_comb - log_hand_combinations
-                initial_prob = np.exp(log_prob)
 
-                logging.debug(
-                    f'Num lands={num_lands_in_hand}, prod={num_producers_in_hand}, other={num_other_cards_in_hand}'
-                )
-                logging.debug(
-                    f'Log probs lands={log_land_comb:.5f}, other={log_other_comb:.5f}, total={log_hand_combinations:.5f}'
-                )
+                logging.debug('Num lands=%d, prod=%d, other=%d',
+                              num_lands_in_hand, num_producers_in_hand,
+                              num_other_cards_in_hand)
+                logging.debug('Log probs lands=%.5f, other=%.5f, total=%.5f',
+                              log_land_comb, log_other_comb,
+                              log_hand_combinations)
 
                 for mana_producers_in_hand in combinations_with_quantity(
                         mana_producers, num_producers_in_hand):
+
+                    log_prob = log_land_comb + log_other_comb - log_hand_combinations
+                    for producer_id, quantity in mana_producers_in_hand.items(
+                    ):
+                        log_prod_comb = log_choose(mana_producers[producer_id],
+                                                   quantity)
+                        log_prob += log_prod_comb
+
+                    initial_prob = np.exp(log_prob)
 
                     mana_producers_in_library = copy.copy(mana_producers)
                     for item, quantity in mana_producers_in_hand.items():
@@ -235,7 +245,7 @@ def calculate_cmc_probs(num_cards_in_library,
 
                     state = State(
                         num_cards_in_library=num_cards_in_library -
-                        num_lands_in_hand - len(mana_producers_in_hand) -
+                        num_lands_in_hand - num_producers_in_hand -
                         num_other_cards_in_hand,
                         turn_number=0,
                         num_lands_in_hand=num_lands_in_hand,
@@ -247,11 +257,11 @@ def calculate_cmc_probs(num_cards_in_library,
                         num_other_cards_in_hand)
                     yield (state, initial_prob, max_turns, max_mana)
                     total_prob += initial_prob
-        logging.debug(f'Total probability from starting hand {total_prob}')
+
+        logging.debug('Total probability from starting hand %.f', total_prob)
 
     prob_table = np.zeros((max_turns + 1, max_mana + 1), dtype=np.double)
-    num_other_cards_in_library = num_cards_in_library - len(
-        mana_producers) - num_lands
+    num_other_cards_in_library = num_cards_in_library - num_mana_producers - num_lands
 
     with multiprocessing.Pool(processes=num_threads) as pool:
         sub_prob_tables = pool.imap_unordered(thread_calc_prob_table,
@@ -263,6 +273,25 @@ def calculate_cmc_probs(num_cards_in_library,
             prob_table += sub_prob_table
 
     return prob_table
+
+
+def reduce_mana_producers(mana_producers):
+    reduced_mana_producers = {}
+    for producer_id, quantity in mana_producers.items():
+        producer = PRODUCERS[producer_id]
+
+        exists = False
+        for reduced_producer_id in reduced_mana_producers:
+            reduced_producer = PRODUCERS[reduced_producer_id]
+            if producer.equivalent(reduced_producer):
+                exists = True
+                reduced_mana_producers[reduced_producer_id] += quantity
+                break
+
+        if not exists:
+            reduced_mana_producers[producer_id] = quantity
+
+    return reduced_mana_producers
 
 
 def display_prob_table(prob_table, print_total_row_prob=False):
