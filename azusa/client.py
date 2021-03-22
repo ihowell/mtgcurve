@@ -47,6 +47,8 @@ class ProgressBar:
 
 loop = get_or_create_eventloop()
 
+os.environ
+
 st.title('Azusa: Probability Curve Calculator')
 
 max_turns = st.sidebar.slider('Max Turns', 1, 10, 3)
