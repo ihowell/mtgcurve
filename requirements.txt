@@ -1,5 +1,5 @@
 fire==0.3.1
-streamlit==0.79.0
+streamlit==1.11.1
 terminaltables==3.1.0
 python_constraint==1.4.0
 requests==2.25.0
