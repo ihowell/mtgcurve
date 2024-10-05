@@ -1,3 +1,5 @@
+from dataclasses import dataclass, field, asdict
+import inspect
 import logging
 
 import fire
@@ -8,11 +10,44 @@ from azusa.parse import parse_moxfield_url
 from azusa.util import cumulative_probs
 
 
+@dataclass
+class Settings:
+    max_turns: int = None
+    max_mana: int = None
+    num_threads: int = None
+    debug: bool = False
+
+    top_of_library_revealed: bool = False
+    colored_mana_calculation: bool = False
+
+    enable_mana_permanent: bool = True
+    enable_land_fetcher: bool = True
+    enable_extra_land: bool = True
+    enable_sacrifice_permanent: bool = True
+
+
 def main(moxfield_url,
-         max_turns=None,
-         max_mana=None,
-         num_threads=4,
-         debug=False):
+         max_turns: int = None,
+         max_mana: int = None,
+         num_threads: int = None,
+         debug: bool = False,
+         top_of_library_revealed: bool = False,
+         colored_mana_calculation: bool = False,
+         enable_mana_permanent: bool = True,
+         enable_land_fetcher: bool = True,
+         enable_extra_land: bool = True,
+         enable_sacrifice_permanent: bool = True):
+
+    settings_params = list(
+        inspect.signature(Settings.__init__).parameters.keys())
+    settings_kwargs = {
+        k: v
+        for k, v in locals().items() if k in settings_params
+    }
+    settings = Settings(**settings_kwargs)
+    print(settings)
+    # print('settings', kwargs)
+    return
     if debug:
         logging.basicConfig(level=logging.DEBUG)
 
@@ -35,5 +70,24 @@ def main(moxfield_url,
     display_prob_table(cumulative_probs(prob_table))
 
 
+def build_settings(max_turns: int = None,
+                   max_mana: int = None,
+                   num_threads: int = None,
+                   debug: bool = False,
+                   top_of_library_revealed: bool = False,
+                   colored_mana_calculation: bool = False,
+                   enable_mana_permanent: bool = True,
+                   enable_land_fetcher: bool = True,
+                   enable_extra_land: bool = True,
+                   enable_sacrifice_permanent: bool = True):
+    return Settings(max_turns, max_mana, num_threads, debug,
+                    top_of_library_revealed, colored_mana_calculation,
+                    enable_mana_permanent, enable_land_fetcher,
+                    enable_extra_land, enable_sacrifice_permanent)
+
+
 if __name__ == '__main__':
     fire.Fire(main)
+    # settings = Settings()
+    # settings = fire.Fire(build_settings)
+    # print('args', settings)

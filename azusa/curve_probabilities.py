@@ -1,6 +1,4 @@
-import concurrent.futures
 from dataclasses import dataclass, field
-import itertools
 import multiprocessing
 import logging
 import copy
@@ -9,8 +7,24 @@ import tqdm
 from terminaltables import AsciiTable
 import numpy as np
 
-from azusa.mana_producers import PRODUCERS, ManaPermanent
-from azusa.util import defaultdict, combinations_with_quantity
+from azusa.mana_producers import PRODUCERS
+from azusa.util import combinations_with_quantity
+
+
+@dataclass
+class Settings:
+    max_turns: int = None
+    max_mana: int = None
+    num_threads: int = None
+    debug: bool = False
+
+    top_of_library_revealed: bool = False
+    colored_mana_calculation: bool = False
+
+    enable_mana_permanent: bool = True
+    enable_land_fetcher: bool = True
+    enable_extra_land: bool = True
+    enable_sacrifice_permanent: bool = True
 
 
 @dataclass
@@ -68,7 +82,6 @@ def start_turn(state):
     new_state.num_cards_in_library = state.num_cards_in_library - 1
     new_state.num_lands_in_library = state.num_lands_in_library - 1
     new_state.num_lands_in_hand = state.num_lands_in_hand + 1
-    # mana_producers_in_hand=copy.copy(state.mana_producers_in_hand))
     possibilities.append((new_state, prob))
 
     # Draw a mana producer
@@ -102,7 +115,7 @@ def start_turn(state):
     return possibilities
 
 
-def play_turn(state):
+def play_turn(state, feature_map):
     remaining_mana = int(state.num_lands_in_play)
     assert remaining_mana >= 0
     remaining_mana += state.extra_mana_per_turn
@@ -151,9 +164,9 @@ def play_turn(state):
     return state, mana_on_turn
 
 
-def calculate_subtree_probs(state, initial_prob, sub_prob_table, max_turns,
-                            max_mana):
-    state, mana = play_turn(state)
+def calculate_subtree_probs(state, feature_map, initial_prob, sub_prob_table,
+                            max_turns, max_mana):
+    state, mana = play_turn(state, feature_map)
     sub_prob_table[state.turn_number, min(mana, max_mana)] += initial_prob
     assert state.turn_number >= 1, state
     assert mana >= 0, state
@@ -162,18 +175,18 @@ def calculate_subtree_probs(state, initial_prob, sub_prob_table, max_turns,
 
     possible_states = start_turn(state)
     for child_state, prob in possible_states:
-        calculate_subtree_probs(child_state, initial_prob * prob,
+        calculate_subtree_probs(child_state, feature_map, initial_prob * prob,
                                 sub_prob_table, max_turns, max_mana)
 
 
 def thread_calc_prob_table(args):
-    hand_state, hand_prob, max_turns, max_mana = args
+    hand_state, hand_prob, max_turns, max_mana, feature_map = args
     sub_prob_table = np.zeros((max_turns + 1, max_mana + 1), dtype=np.double)
     child_prob = 0.
     for child_state, prob in start_turn(hand_state):
         child_prob += prob
-        calculate_subtree_probs(child_state, hand_prob * prob, sub_prob_table,
-                                max_turns, max_mana)
+        calculate_subtree_probs(child_state, feature_map, hand_prob * prob,
+                                sub_prob_table, max_turns, max_mana)
 
     return sub_prob_table
 
